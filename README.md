@@ -2,6 +2,12 @@
 
 A simple OAuth 2.0 service for authentication and authorization.
 
+http://localhost:3000/demoClient/login.html
+
+Demo [https://nyangoauth.r-e.kr/login.html](https://nyangoauth.r-e.kr/login.html) in your browser.
+
+Demo Client [https://nyangoauth.r-e.kr/demoClient/login.html](https://nyangoauth.r-e.kr/demoClient/login.html) in your browser.
+
 ## Features
 
 - User registration and login

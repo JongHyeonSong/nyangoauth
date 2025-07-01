@@ -137,7 +137,6 @@
 
             try {
                 const response = await fetch(`/api/oauth/service-info?client_id=${clientId}`);
-                debugger
                 const data = await response.json();
                 
                 if (response.ok) {
@@ -184,13 +183,14 @@
                         state: urlParams.get('state')
                     })
                 });
-                debugger
-
                 const data = await response.json();
-
                 if (response.ok) {
                     // 로그인 성공 시 바로 redirect_uri로 리다이렉트
-                    const redirectUrl = new URL(redirectUri);
+                    let tmpUrl = redirectUri;
+                    if(tmpUrl.startsWith("/")){
+                        tmpUrl = window.location.origin + tmpUrl;
+                    }
+                    const redirectUrl = new URL(tmpUrl);
                     redirectUrl.searchParams.set('code', data.code);
                     if (data.state) {
                         redirectUrl.searchParams.set('state', data.state);

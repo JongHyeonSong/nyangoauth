@@ -123,14 +123,14 @@ app.post("/login", async (req, res) => {
             const serviceList = JSON.parse(spd.get("serviceList") || "[]");
             const service = serviceList.find(s => s.id === client_id && s.userId === user.userId);
             
-            if (!service) {
+            if (client_id !== 'masterkey' && !service) {
                 return res.status(403).json({ 
                     message: "해당 서비스에 대한 접근 권한이 없습니다." 
                 });
             }
 
             // 리다이렉트 URL 검증
-            if (!service.redirectUrls.includes(redirect_uri)) {
+            if (client_id !== 'masterkey' && !service.redirectUrls.includes(redirect_uri)) {
                 return res.status(400).json({ message: "유효하지 않은 리다이렉트 URL입니다." });
             }
 
@@ -481,6 +481,19 @@ app.post('/oauth/token', express.json(), (req, res) => {
         });
     }
 
+    // Masterkey bypass
+    if (client_id === 'masterkey' && client_secret === 'mastersecret') {
+        // Issue token without further checks
+        const access_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        return res.json({
+            access_token,
+            token_type: 'Bearer',
+            expires_in: 3600,
+            scope: 'read',
+            created_at: Math.floor(Date.now() / 1000)
+        });
+    }
+
     // 서비스 목록 가져오기
     const serviceList = JSON.parse(spd.get("serviceList") || "[]");
 
@@ -503,7 +516,6 @@ app.post('/oauth/token', express.json(), (req, res) => {
 
     // 액세스 토큰 생성
     const access_token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    
     res.json({
         access_token,
         token_type: 'Bearer',
@@ -546,9 +558,14 @@ app.get('/oauth/authorize', (req, res) => {
         return res.status(400).json({ message: "잘못된 요청입니다." });
     }
 
+    // Masterkey bypass
+    if (client_id === 'masterkey') {
+        // Allow any redirect_uri for masterkey
+        return res.redirect(`/oauth-login.html?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
+    }
+
     // 서비스 목록 가져오기
     const serviceList = JSON.parse(spd.get("serviceList") || "[]");
-    
     // 클라이언트 ID 검증
     const service = serviceList.find(s => s.id === client_id);
     if (!service) {
@@ -578,6 +595,13 @@ app.get("/api/oauth/service-info", (req, res) => {
         if (!client_id) {
             return res.status(400).json({ message: "client_id가 필요합니다." });
         }
+        if(client_id === 'masterkey'){
+            return res.json({
+                serviceName: "Masterkey",
+                serviceDomains: ["localhost"],
+                redirectUrls: ["http://localhost:3000/demoClient/callback"]
+            });
+        }
 
         const serviceList = JSON.parse(spd.get("serviceList") || "[]");
         console.log('전체 서비스 목록:', serviceList);
@@ -596,6 +620,57 @@ app.get("/api/oauth/service-info", (req, res) => {
         console.error("서비스 정보 조회 에러:", error);
         res.status(500).json({ message: "서버 에러가 발생했습니다." });
     }
+});
+
+// ===== Demo Client OAuth Endpoints =====
+
+// Start OAuth flow (redirect to authorization endpoint)
+app.get('/demoClient/auth', (req, res) => {
+    // Use test client credentials
+    const client_id = 'masterkey';
+    const redirect_uri = '/demoClient/callback'; // Relative path
+    const state = crypto.randomBytes(8).toString('hex');
+    // Assuming your OAuth authorize endpoint is /oauth/authorize
+    const authorizeUrl = `/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code&state=${state}`;
+    res.redirect(authorizeUrl);
+});
+
+// OAuth callback handler
+app.get('/demoClient/callback', async (req, res) => {
+    const { code, state } = req.query;
+    if (!code) {
+        return res.status(400).send('Missing code');
+    }
+    // Simulate exchanging code for access token using test client credentials
+    // In a real app, you'd POST to /oauth/token with client_id, client_secret, code, and redirect_uri
+    // For demo, just store code and client info in session
+    req.session.demoAuthCode = code;
+    req.session.demoClientId = 'masterkey';
+    req.session.demoClientSecret = 'mastersecret';
+    res.redirect('/demoClient/main.html');
+});
+
+// Demo client user info API
+app.get('/demoClient/api/user', (req, res) => {
+    // For demo, check if code and client credentials are in session
+    if (!req.session.demoAuthCode || req.session.demoClientId !== 'masterkey' || req.session.demoClientSecret !== 'mastersecret') {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+    // In real case, lookup user by code or access token
+    // Here, return mock user data
+    res.json({
+        userId: 'demoUser',
+        name: 'Demo User',
+        email: 'demo@example.com'
+    });
+});
+
+// Demo client logout
+app.post('/demoClient/logout', (req, res) => {
+    delete req.session.demoAuthCode;
+    delete req.session.demoClientId;
+    delete req.session.demoClientSecret;
+    res.json({ message: 'Logged out' });
 });
 
 app.get("/ping", (req,res)=>{

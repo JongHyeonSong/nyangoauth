@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>외부 서비스 메인</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 60px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 32px 24px; }
+        h1 { color: #333; margin-bottom: 16px; }
+        .info { margin-bottom: 24px; color: #555; }
+        .user-block { background: #f8f9fa; padding: 16px; border-radius: 6px; margin-bottom: 20px; }
+        .logout-btn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .logout-btn:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>외부 서비스 메인</h1>
+        <div class="info">이 페이지는 OAuth 인증 후 접근 가능합니다.</div>
+        <div class="user-block" id="userBlock" style="display:none;">
+            <div><b>사용자 ID:</b> <span id="userId"></span></div>
+            <div><b>이름:</b> <span id="userName"></span></div>
+            <div><b>이메일:</b> <span id="userEmail"></span></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+    <script>
+        // 인증된 사용자 정보 표시
+        window.onload = async function() {
+            try {
+                const res = await fetch('/demoClient/api/user');
+                if (!res.ok) throw new Error();
+                const user = await res.json();
+                document.getElementById('userId').textContent = user.userId;
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userBlock').style.display = '';
+            } catch {
+                // 인증 안된 경우 로그인 페이지로 이동
+                window.location.href = '/login.html';
+            }
+        };
+        function logout() {
+            fetch('/demoClient/logout', { method: 'POST' }).then(() => {
+                window.location.href = '/login.html';
+            });
+        }
+    </script>
+</body>
+</html>
