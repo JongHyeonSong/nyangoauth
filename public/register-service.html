@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petnyang OAuth - 서비스 등록</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-links {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .nav-links a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            min-height: 100px;
+            font-family: monospace;
+        }
+        .help-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .url-list {
+            margin-bottom: 10px;
+        }
+        .url-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .url-item input {
+            flex: 1;
+        }
+        .url-item button {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .url-item button:hover {
+            background-color: #c82333;
+        }
+        .add-url {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .add-url:hover {
+            background-color: #218838;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-links">
+            <a href="/">홈</a>
+            <a href="/login.html">로그인</a>
+            <a href="/signup.html">회원가입</a>
+            <a href="/dashboard.html">대시보드</a>
+        </div>
+        <h1>Petnyang OAuth 서비스 등록</h1>
+        <form id="serviceForm">
+            <div class="form-group">
+                <label for="serviceName">서비스 이름</label>
+                <input type="text" id="serviceName" name="serviceName" required>
+            </div>
+            <div class="form-group">
+                <label for="serviceDomains">서비스 도메인</label>
+                <textarea id="serviceDomains" name="serviceDomains" required placeholder="example.com&#10;api.example.com&#10;dev.example.com"></textarea>
+                <div class="help-text">각 도메인을 새 줄로 구분하여 입력하세요.</div>
+            </div>
+            <div class="form-group">
+                <label for="redirectUrls">리다이렉트 URL</label>
+                <textarea id="redirectUrls" name="redirectUrls" required placeholder="https://example.com/callback&#10;https://api.example.com/oauth/callback"></textarea>
+                <div class="help-text">각 URL을 새 줄로 구분하여 입력하세요. http:// 또는 https://로 시작해야 합니다.</div>
+            </div>
+            <button type="submit" class="submit-btn">서비스 등록</button>
+        </form>
+    </div>
+
+    <script>
+        function addUrl() {
+            const urlList = document.getElementById('redirectUrls');
+            const urlItem = document.createElement('div');
+            urlItem.className = 'url-item';
+            urlItem.innerHTML = `
+                <input type="text" name="redirectUrls[]" required>
+                <button type="button" onclick="removeUrl(this)">삭제</button>
+            `;
+            urlList.appendChild(urlItem);
+        }
+
+        function removeUrl(button) {
+            const urlItem = button.parentElement;
+            if (document.querySelectorAll('.url-item').length > 1) {
+                urlItem.remove();
+            }
+        }
+
+        document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                serviceName: document.getElementById('serviceName').value,
+                serviceDomains: document.getElementById('serviceDomains').value.split('\n').filter(domain => domain.trim()),
+                redirectUrls: document.getElementById('redirectUrls').value.split('\n').filter(url => url.trim())
+            };
+
+            try {
+                const response = await fetch('/api/services', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('서비스가 성공적으로 등록되었습니다!');
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert(result.message || '서비스 등록에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('서비스 등록 에러:', error);
+                alert('서비스 등록 중 오류가 발생했습니다.');
+            }
+        });
+    </script>
+</body>
+</html> 

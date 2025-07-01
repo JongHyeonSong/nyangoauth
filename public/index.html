@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메인 페이지</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .login-status {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .login-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .login-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-status" id="loginStatus">
+            로그인 상태를 확인하는 중...
+        </div>
+        <a href="/login.html" class="login-button">로그인하기</a>
+    </div>
+
+    <script>
+        // 로그인 상태 확인
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                const statusElement = document.getElementById('loginStatus');
+                
+                if (data.isLoggedIn) {
+                    statusElement.innerHTML = `로그인됨: ${data.username}`;
+                    statusElement.style.backgroundColor = '#d4edda';
+                } else {
+                    statusElement.innerHTML = '로그인되지 않음';
+                    statusElement.style.backgroundColor = '#f8d7da';
+                }
+            } catch (error) {
+                console.error('로그인 상태 확인 중 오류:', error);
+                document.getElementById('loginStatus').innerHTML = '로그인 상태 확인 실패';
+            }
+        }
+
+        // 페이지 로드 시 로그인 상태 확인
+        window.addEventListener('load', checkLoginStatus);
+    </script>
+</body>
+</html>

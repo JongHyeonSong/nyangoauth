@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - Petnyang OAuth</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-links {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .nav-links a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .user-list, .service-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .user-list th, .user-list td,
+        .service-list th, .service-list td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .user-list th, .service-list th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .user-list tr:hover, .service-list tr:hover {
+            background-color: #f8f9fa;
+        }
+        .no-users, .no-services {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .register-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .register-btn:hover {
+            background-color: #218838;
+        }
+        .url-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .url-list li {
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .client-info {
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        .client-info div {
+            margin-bottom: 5px;
+        }
+        .client-info .label {
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .client-info .value {
+            color: #333;
+            font-weight: bold;
+        }
+        .copy-btn {
+            padding: 2px 6px;
+            font-size: 11px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .copy-btn:hover {
+            background-color: #5a6268;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .edit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .edit-btn:hover {
+            background-color: #0056b3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .modal textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .modal button[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-links">
+            <a href="/">홈</a>
+            <a href="/login.html">로그인</a>
+            <a href="/signup.html">회원가입</a>
+            <a href="/dashboard.html">대시보드</a>
+        </div>
+        
+        <div class="section">
+            <h1>사용자 목록</h1>
+            <table class="user-list">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>이름</th>
+                        <th>이메일</th>
+                        <th>비밀번호</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <!-- 사용자 목록이 여기에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h1>내 서비스 관리</h1>
+            <a href="/register-service.html" class="register-btn">새 서비스 등록</a>
+            <table class="service-list">
+                <thead>
+                    <tr>
+                        <th>서비스 이름</th>
+                        <th>serviceDomains</th>
+                        <th>리다이렉트 URL</th>
+                        <th>등록자</th>
+                        <th>등록일</th>
+                        <th>클라이언트 ID</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceTableBody">
+                    <!-- 서비스 목록이 여기에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>서비스 수정</h2>
+            <form id="editServiceForm">
+                <input type="hidden" id="editServiceId">
+                <div class="form-group">
+                    <label for="editServiceName">서비스 이름</label>
+                    <input type="text" id="editServiceName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editServiceDomains">serviceDomains</label>
+                    <textarea id="editServiceDomains" required></textarea>
+                    <div class="help-text">각 도메인을 새 줄로 구분하여 입력하세요.</div>
+                </div>
+                <div class="form-group">
+                    <label for="editRedirectUrls">리다이렉트 URL</label>
+                    <textarea id="editRedirectUrls" required></textarea>
+                    <div class="help-text">각 URL을 새 줄로 구분하여 입력하세요.</div>
+                </div>
+                <button type="submit">수정하기</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수로 선언
+        let serviceData = [];
+
+        // 페이지 로드 시 사용자 목록 가져오기
+        window.addEventListener('load', async () => {
+            try {
+                // 사용자 목록 가져오기
+                const userResponse = await fetch('/users');
+                const userData = await userResponse.json();
+                const userTableBody = document.getElementById('userTableBody');
+                
+                if (userData.length === 0) {
+                    userTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="no-users">등록된 사용자가 없습니다.</td>
+                        </tr>
+                    `;
+                } else {
+                    userTableBody.innerHTML = userData.map(user => `
+                        <tr>
+                            <td>${user.userId}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.password}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // 서비스 목록 가져오기
+                const serviceResponse = await fetch('/api/my-services');
+                if (serviceResponse.status === 401) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                serviceData = await serviceResponse.json();
+                const serviceTableBody = document.getElementById('serviceTableBody');
+                
+                if (serviceData.length === 0) {
+                    serviceTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="no-services">
+                                등록된 서비스가 없습니다.<br>
+                                <a href="/register-service.html" class="register-btn">새 서비스 등록하기</a>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    serviceTableBody.innerHTML = serviceData.map(service => `
+                        <tr>
+                            <td>${service.serviceName}</td>
+                            <td>
+                                <ul class="url-list">
+                                    ${service.serviceDomains.map(domain => `<li>${domain}</li>`).join('')}
+                                </ul>
+                            </td>
+                            <td>
+                                <ul class="url-list">
+                                    ${service.redirectUrls.map(url => `<li>${url}</li>`).join('')}
+                                </ul>
+                            </td>
+                            <td>${service.userName}</td>
+                            <td>${new Date(service.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <div class="client-info">
+                                    <div>
+                                        <div class="label">Client ID</div>
+                                        <div class="value">
+                                            ${service.id}
+                                            <button class="copy-btn" onclick="copyToClipboard('${service.id}')">복사</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="label">Client Secret</div>
+                                        <div class="value">
+                                            ${service.clientSecret || '시크릿이 없습니다'}
+                                            ${service.clientSecret ? `<button class="copy-btn" onclick="copyToClipboard('${service.clientSecret}')">복사</button>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="action-btn edit-btn" onclick="openEditModal('${service.id}')">수정</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('데이터를 가져오는데 실패했습니다:', error);
+            }
+        });
+
+        // 모달 관련 코드
+        const modal = document.getElementById('editModal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const editForm = document.getElementById('editServiceForm');
+
+        function openEditModal(serviceId) {
+            const service = serviceData.find(s => s.id === serviceId);
+            if (service) {
+                document.getElementById('editServiceId').value = service.id;
+                document.getElementById('editServiceName').value = service.serviceName;
+                document.getElementById('editServiceDomains').value = service.serviceDomains.join('\n');
+                document.getElementById('editRedirectUrls').value = service.redirectUrls.join('\n');
+                modal.style.display = 'block';
+            }
+        }
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        editForm.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const serviceId = document.getElementById('editServiceId').value;
+            const formData = {
+                serviceName: document.getElementById('editServiceName').value,
+                serviceDomains: document.getElementById('editServiceDomains').value.split('\n').filter(domain => domain.trim()),
+                redirectUrls: document.getElementById('editRedirectUrls').value.split('\n').filter(url => url.trim())
+            };
+
+            try {
+                const response = await fetch(`/api/services/${serviceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('서비스가 성공적으로 수정되었습니다!');
+                    modal.style.display = 'none';
+                    window.location.reload();
+                } else {
+                    alert(result.message || '서비스 수정에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('서비스 수정 에러:', error);
+                alert('서비스 수정 중 오류가 발생했습니다.');
+            }
+        };
+
+        // 클립보드 복사 함수
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('클립보드에 복사되었습니다.');
+            }).catch(err => {
+                console.error('클립보드 복사 실패:', err);
+                alert('클립보드 복사에 실패했습니다.');
+            });
+        }
+    </script>
+</body>
+</html>
